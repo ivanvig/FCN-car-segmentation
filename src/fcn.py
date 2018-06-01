@@ -1,5 +1,4 @@
-import tensorflow
-import fcn_input
+import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -9,12 +8,13 @@ tf.app.flags.DEFINE_integer('batch_size', 1,
 tf.app.flags.DEFINE_string('data_dir', '../data/ig02-cars/cars/',
 """Path to the ig02 data directory.""")
 
-tf.app.flags.DEFINE_string('filelist_dir', '../data/ig02-cars/',
+tf.app.flags.DEFINE_string('train_files', '../data/ig02-cars/cars_train.txt',
 """Path to the ig02 file lists directory.""")
 
 NUM_CLASSES = 2
 NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = 177
 NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 46
+MOVING_AVERAGE_DECAY = 0.9999
 
 def _create_weights(name, shape, stddev, wd=None):
     var = tf.Variable(tf.truncated_normal(shape=shape, stddev=stddev, name=name))
@@ -24,7 +24,7 @@ def _create_weights(name, shape, stddev, wd=None):
     return var
 
 def _create_bias(name, shape):
-    return tf.Variable(name=name, tf.constant(1., shape=shape, dtype=tf.float32))
+    return tf.Variable(tf.constant(value=0.0, shape=shape, dtype=tf.float32), name=name)
 
 def inference(images):
     """FCN model building.
@@ -95,7 +95,7 @@ def inference(images):
             wd=0.004
         )
         conv = tf.nn.conv2d(pool2, kernel, [1,1,1,1], padding='SAME')
-        biases = _create_bias('biases', tf.shape(conv)[0])
+        biases = _create_bias('biases', [32])
         pre_activation = tf.nn.bias_add(conv, biases)
         conv1_1 = tf.nn.relu(pre_activation, name=scope.name)
         # TODO: summary
@@ -109,16 +109,17 @@ def inference(images):
             wd=None
         )
         conv = tf.nn.conv2d(conv1_1, kernel, [1,1,1,1], padding='SAME')
-        biases = _create_bias('biases', tf.shape(conv)[0])
+        biases = _create_bias('biases', [NUM_CLASSES])
         pre_activation = tf.nn.bias_add(conv, biases)
         conv2_1 = pre_activation # no se le aplica softmax aca
         # TODO: summary
 
-    return conv2_1
+    #return conv2_1
+    return tf.image.resize_images(conv2_1, tf.shape(images)[1:3]) # esta bien esto?
 
 def loss(logits, labels):
     labels = tf.cast(labels, tf.int32)
-    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits( # TODO: usar sparce softmax con una sola mask
         labels=labels, logits=logits, name='cross_entroy_per_example'
     )
     cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
@@ -142,7 +143,7 @@ def train(total_loss, global_step):
     num_batches_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN / FLAGS.batch_size
     loss_averages_op = _add_loss_sumaries(total_loss)
 
-    with tf.control_dependecies([loss_averages_op]):
+    with tf.control_dependencies([loss_averages_op]):
         opt = tf.train.AdamOptimizer() # default values
         grads = opt.compute_gradients(total_loss)
 

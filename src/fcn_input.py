@@ -17,8 +17,9 @@ def _parse_function(imagename, data_path):
 
     label = tf.image.decode_png(tf.read_file(data_path+imagename+".mask.png"), channels=1)
     label = tf.divide(label,255)
+    label_bg = tf.subtract(tf.fill(tf.shape(label), 1.0), label)
 
-    return img_std, label
+    return img_std, tf.stack([label, label_bg])
 
 
 if __name__ == '__main__':
@@ -27,6 +28,8 @@ if __name__ == '__main__':
     images, labels = load_dataset("../data/ig02-cars/cars_train.txt", "../data/ig02-cars/cars/")
     with tf.Session() as sess:
         i, l = sess.run([images, labels])
+        print(l.shape)
+        print(i.shape)
         #plt.imshow(i[0,:,:,0], cmap="gray")
-        plt.imshow(l[0,:,:,0], cmap="gray")
+        plt.imshow(l[0,1,:,:,0], cmap="gray")
         plt.show()
