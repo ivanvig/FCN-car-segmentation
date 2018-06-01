@@ -1,16 +1,16 @@
 import tensorflow as tf
 
-def load_dataset(filename, data_path):
+def load_dataset(filename, data_path, batch_size=1):
     image_names = tf.constant(open(filename).read().split('\n'))
     dataset = tf.data.Dataset.from_tensor_slices(image_names)
     dataset = dataset.map(lambda x: _parse_function(x, data_path))
 
     #batch = 1 porque tf no puede hacer batch de imagenes de distintas dimensiones
-    dataset = dataset.shuffle(100).batch(1)
+    dataset = dataset.shuffle(100).batch(batch_size)
     return dataset.make_one_shot_iterator().get_next()
 
 def _parse_function(imagename, data_path):
-    img = tf.read_file(data_path+imagename+".image.png")
+    img = tf.read_file(data_path+imagename+".image.png") # TODO: usar os
     img_dec = tf.image.decode_image(img, channels=3)
     img = tf.image.rgb_to_grayscale(img_dec)
     img_std = tf.image.per_image_standardization(img)
