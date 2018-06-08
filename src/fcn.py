@@ -90,12 +90,12 @@ def inference(images):
     with tf.variable_scope('conv1_1') as scope:
         kernel = _create_weights(
             'weights',
-            shape=[1,1,32,128],
+            shape=[1,1,32,64],
             stddev=5e-2,
             wd=None
         )
         conv = tf.nn.conv2d(pool2, kernel, [1,1,1,1], padding='SAME')
-        biases = _create_bias('biases', [32])
+        biases = _create_bias('biases', [64])
         pre_activation = tf.nn.bias_add(conv, biases)
         conv1_1 = tf.nn.relu(pre_activation, name=scope.name)
         # TODO: summary
@@ -104,8 +104,8 @@ def inference(images):
     with tf.variable_scope('conv2_1') as scope:
         kernel = _create_weights(
             'weights',
-            shape=[1,1,128,NUM_CLASSES],
-            stddev=1/32.0,
+            shape=[1,1,64,NUM_CLASSES],
+            stddev=1/64.0,
             wd=None
         )
         conv = tf.nn.conv2d(conv1_1, kernel, [1,1,1,1], padding='SAME')

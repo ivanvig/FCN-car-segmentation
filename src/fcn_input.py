@@ -1,4 +1,8 @@
 import tensorflow as tf
+from distutils.version import LooseVersion
+
+if LooseVersion(tf.__version__) < LooseVersion("1.5"):
+    settatr(tf, 'data', tf.contrib.data)
 
 def load_dataset(filename, data_path, batch_size=1):
     # ese -1 es para eliminar un elemento vacio de la lista
