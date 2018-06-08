@@ -2,11 +2,18 @@ import tensorflow as tf
 import time
 from datetime import datetime
 
+############ DEBUG ################
+from tensorflow.python import debug as tf_debug
+############ DEBUG ################
+
+
 import fcn
 import fcn_input
 
 FLAGS = tf.app.flags.FLAGS
 
+tf.app.flags.DEFINE_boolean('debug', False,
+                           """Debug flag indicator""")
 tf.app.flags.DEFINE_string('train_dir', '/tmp/ig02_train',
                            """Directory where to write event logs """
                            """and checkpoint.""")
@@ -26,6 +33,7 @@ def train():
     # Get images and labels for ig02.
     # Force input pipeline to CPU:0 to avoid operations sometimes ending up on
     # GPU and resulting in a slow down.
+
     with tf.device('/cpu:0'):
       images, labels = fcn_input.load_dataset(FLAGS.train_files, FLAGS.data_dir, FLAGS.batch_size)
 
@@ -66,13 +74,22 @@ def train():
           print (format_str % (datetime.now(), self._step, loss_value,
                                examples_per_sec, sec_per_batch))
 
+    if FLAGS.debug: #borrar despues esto
+      with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        i, l = sess.run([logits, labels])
+        print(i.shape)
+        print(l.shape)
+        exit()
     with tf.train.MonitoredTrainingSession(
         checkpoint_dir=FLAGS.train_dir,
         hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
                tf.train.NanTensorHook(loss),
                _LoggerHook()],
         config=tf.ConfigProto(
-            log_device_placement=FLAGS.log_device_placement)) as mon_sess:
+          log_device_placement=FLAGS.log_device_placement)) as mon_sess:
+      if FLAGS.debug:
+        mon_sess = tf_debug.LocalCLIDebugWrapperSession(mon_sess)
       while not mon_sess.should_stop():
         mon_sess.run(train_op)
 

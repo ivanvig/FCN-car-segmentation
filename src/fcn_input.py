@@ -1,12 +1,13 @@
 import tensorflow as tf
 
 def load_dataset(filename, data_path, batch_size=1):
-    image_names = tf.constant(open(filename).read().split('\n'))
+    # ese -1 es para eliminar un elemento vacio de la lista
+    image_names = tf.constant(open(filename).read().split('\n')[:-1])
     dataset = tf.data.Dataset.from_tensor_slices(image_names)
     dataset = dataset.map(lambda x: _parse_function(x, data_path))
 
     #batch = 1 porque tf no puede hacer batch de imagenes de distintas dimensiones
-    dataset = dataset.shuffle(100).batch(batch_size)
+    dataset = dataset.shuffle(100).repeat().batch(batch_size)
     return dataset.make_one_shot_iterator().get_next()
 
 def _parse_function(imagename, data_path):
@@ -19,17 +20,17 @@ def _parse_function(imagename, data_path):
     label = tf.divide(label,255)
     label_bg = tf.subtract(tf.fill(tf.shape(label), 1.0), label)
 
-    return img_std, tf.stack([label, label_bg])
+    return img_std, tf.concat([label, label_bg], 2)
 
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
-    images, labels = load_dataset("../data/ig02-cars/cars_train.txt", "../data/ig02-cars/cars/")
+    #images, labels = load_dataset("../data/ig02-cars/cars_train.txt", "../data/ig02-cars/cars/")
+    names = load_dataset("../data/ig02-cars/cars_train.txt", "../data/ig02-cars/cars/")
     with tf.Session() as sess:
-        i, l = sess.run([images, labels])
-        print(l.shape)
-        print(i.shape)
+        n = sess.run([names])
+        print(n)
         #plt.imshow(i[0,:,:,0], cmap="gray")
-        plt.imshow(l[0,1,:,:,0], cmap="gray")
-        plt.show()
+        #plt.imshow(l[0,1,:,:,0], cmap="gray")
+        #plt.show()
