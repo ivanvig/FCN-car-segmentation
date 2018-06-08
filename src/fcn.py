@@ -3,7 +3,7 @@ import tensorflow as tf
 FLAGS = tf.app.flags.FLAGS
 
 # Basic model parameters.
-tf.app.flags.DEFINE_integer('batch_size', 1,
+tf.app.flags.DEFINE_integer('batch_size', 20,
                             """Number of images to process in a batch.""")
 tf.app.flags.DEFINE_string('data_dir', '../data/ig02-cars/cars/',
 """Path to the ig02 data directory.""")
@@ -52,7 +52,7 @@ def inference(images):
 
     pool1 = tf.nn.max_pool(
         conv1,
-        ksize=[1,3,3,1],
+        ksize=[1,2,2,1],
         strides=[1,2,2,1],
         padding='SAME',
         name='pool1'
@@ -78,7 +78,7 @@ def inference(images):
 
     pool2 = tf.nn.max_pool(
         conv2,
-        ksize=[1,3,3,1],
+        ksize=[1,2,2,1],
         strides=[1,2,2,1],
         padding='SAME',
         name='pool2'
@@ -90,9 +90,9 @@ def inference(images):
     with tf.variable_scope('conv1_1') as scope:
         kernel = _create_weights(
             'weights',
-            shape=[1,1,32,32],
+            shape=[1,1,32,128],
             stddev=5e-2,
-            wd=0.004
+            wd=None
         )
         conv = tf.nn.conv2d(pool2, kernel, [1,1,1,1], padding='SAME')
         biases = _create_bias('biases', [32])
@@ -104,7 +104,7 @@ def inference(images):
     with tf.variable_scope('conv2_1') as scope:
         kernel = _create_weights(
             'weights',
-            shape=[1,1,32,NUM_CLASSES],
+            shape=[1,1,128,NUM_CLASSES],
             stddev=1/32.0,
             wd=None
         )

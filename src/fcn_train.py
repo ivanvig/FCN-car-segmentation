@@ -48,6 +48,12 @@ def train():
     # updates the model parameters.
     train_op = fcn.train(loss, global_step)
 
+    # Agrego summary de imagenes
+    tf.summary.image('input', images)
+    tf.summary.image('label', labels[:,:,:,0:1])
+    tf.summary.image('output autos', logits[:,:,:,0:1])
+    tf.summary.image('output background', logits[:,:,:,1:2])
+
     class _LoggerHook(tf.train.SessionRunHook):
       """Logs loss and runtime."""
 

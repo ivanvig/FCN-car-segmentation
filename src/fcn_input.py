@@ -12,11 +12,14 @@ def load_dataset(filename, data_path, batch_size=1):
 
 def _parse_function(imagename, data_path):
     img = tf.read_file(data_path+imagename+".image.png") # TODO: usar os
-    img_dec = tf.image.decode_image(img, channels=3)
+    img_dec = tf.image.decode_png(img, channels=3)
     img = tf.image.rgb_to_grayscale(img_dec)
+    # submuestreo y pongo todo a la misma dimension para usar batch > 1
+    img = tf.image.resize_images(img, [120, 160])
     img_std = tf.image.per_image_standardization(img)
 
     label = tf.image.decode_png(tf.read_file(data_path+imagename+".mask.png"), channels=1)
+    label = tf.image.resize_images(label, [120, 160])
     label = tf.divide(label,255)
     label_bg = tf.subtract(tf.fill(tf.shape(label), 1.0), label)
 
@@ -26,11 +29,9 @@ def _parse_function(imagename, data_path):
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
-    #images, labels = load_dataset("../data/ig02-cars/cars_train.txt", "../data/ig02-cars/cars/")
-    names = load_dataset("../data/ig02-cars/cars_train.txt", "../data/ig02-cars/cars/")
+    images, labels = load_dataset("../data/ig02-cars/cars_train.txt", "../data/ig02-cars/cars/")
     with tf.Session() as sess:
-        n = sess.run([names])
-        print(n)
-        #plt.imshow(i[0,:,:,0], cmap="gray")
-        #plt.imshow(l[0,1,:,:,0], cmap="gray")
-        #plt.show()
+        i,l = sess.run([images, labels])
+        plt.imshow(i[0,:,:,0], cmap="gray")
+        plt.imshow(l[0,1,:,:,0], cmap="gray")
+        plt.show()
