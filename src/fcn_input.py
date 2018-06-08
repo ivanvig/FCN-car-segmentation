@@ -10,7 +10,6 @@ def load_dataset(filename, data_path, batch_size=1):
     dataset = tf.data.Dataset.from_tensor_slices(image_names)
     dataset = dataset.map(lambda x: _parse_function(x, data_path))
 
-    #batch = 1 porque tf no puede hacer batch de imagenes de distintas dimensiones
     dataset = dataset.shuffle(100).repeat().batch(batch_size)
     return dataset.make_one_shot_iterator().get_next()
 
@@ -19,11 +18,12 @@ def _parse_function(imagename, data_path):
     img_dec = tf.image.decode_png(img, channels=3)
     img = tf.image.rgb_to_grayscale(img_dec)
     # submuestreo y pongo todo a la misma dimension para usar batch > 1
-    img = tf.image.resize_images(img, [120, 160])
+    #img = tf.image.resize_images(img, [240, 380]) # TODO: hacerlo dinamico
+    img = tf.image.resize_images(img, [120, 160]) # TODO: hacerlo dinamico
     img_std = tf.image.per_image_standardization(img)
 
     label = tf.image.decode_png(tf.read_file(data_path+imagename+".mask.png"), channels=1)
-    label = tf.image.resize_images(label, [120, 160])
+    label = tf.image.resize_images(label, [120, 160]) # TODO: hacerlo dinamico
     label = tf.divide(label,255)
     label_bg = tf.subtract(tf.fill(tf.shape(label), 1.0), label)
 

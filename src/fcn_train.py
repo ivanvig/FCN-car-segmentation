@@ -52,6 +52,14 @@ def train():
     tf.summary.image('input', images)
     tf.summary.image('label', labels[:,:,:,0:1])
     tf.summary.image('output autos', logits[:,:,:,0:1])
+    tf.summary.image('Mask', tf.where(
+      tf.less(
+        logits[:,:,:,0:1],
+        tf.zeros(tf.shape(logits[:,:,:,0:1]))
+      ),
+      tf.zeros(tf.shape(logits[:,:,:,0:1])),
+      tf.ones(tf.shape(logits[:,:,:,0:1]))
+    ))
     tf.summary.image('output background', logits[:,:,:,1:2])
 
     class _LoggerHook(tf.train.SessionRunHook):
