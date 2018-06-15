@@ -40,12 +40,12 @@ def inference(images):
     with tf.variable_scope('conv1') as scope:
         kernel = _create_weights(
             'weights',
-            shape=[3, 3, 1, 16],
+            shape=[3, 3, 1, 8],
             stddev=5e-2,
             wd=None
         )
         conv = tf.nn.conv2d(images, kernel, [1,1,1,1], padding='SAME')
-        biases = _create_bias('biases', [16])
+        biases = _create_bias('biases', [8])
         pre_activation = tf.nn.bias_add(conv, biases)
         conv1 = tf.nn.relu(pre_activation, name=scope.name)
         # TODO: summary
@@ -66,12 +66,12 @@ def inference(images):
     with tf.variable_scope('conv2') as scope:
         kernel = _create_weights(
             'weights',
-            shape=[3,3,16,32],
+            shape=[3,3,8,8],
             stddev=5e-2,
             wd=None
         )
         conv = tf.nn.conv2d(pool1, kernel, [1,1,1,1], padding='SAME')
-        biases = _create_bias('biases', [32])
+        biases = _create_bias('biases', [8])
         pre_activation = tf.nn.bias_add(conv, biases)
         conv2 = tf.nn.relu(pre_activation, name=scope.name)
         # TODO: summary
@@ -84,6 +84,27 @@ def inference(images):
         name='pool2'
     )
 
+    # conv3
+    with tf.variable_scope('conv3') as scope:
+        kernel = _create_weights(
+            'weights',
+            shape=[3,3,8,32],
+            stddev=5e-2,
+            wd=None
+        )
+        conv = tf.nn.conv2d(pool2, kernel, [1,1,1,1], padding='SAME')
+        biases = _create_bias('biases', [32])
+        pre_activation = tf.nn.bias_add(conv, biases)
+        conv3 = tf.nn.relu(pre_activation, name=scope.name)
+        # TODO: summary
+
+    pool3 = tf.nn.max_pool(
+        conv3,
+        ksize=[1,2,2,1],
+        strides=[1,2,2,1],
+        padding='SAME',
+        name='pool3'
+    )
     # replacing fully connecteds
 
     # conv1_1
@@ -94,7 +115,7 @@ def inference(images):
             stddev=5e-2,
             wd=None
         )
-        conv = tf.nn.conv2d(pool2, kernel, [1,1,1,1], padding='SAME')
+        conv = tf.nn.conv2d(pool3, kernel, [1,1,1,1], padding='SAME')
         biases = _create_bias('biases', [64])
         pre_activation = tf.nn.bias_add(conv, biases)
         conv1_1 = tf.nn.relu(pre_activation, name=scope.name)
@@ -115,7 +136,7 @@ def inference(images):
         # TODO: summary
 
     #return conv2_1
-    return tf.image.resize_images(conv2_1, tf.shape(images)[1:3]) # esta bien esto?
+    return tf.image.resize_images(conv2_1, tf.shape(images)[1:3])
 
 def loss(logits, labels):
     labels = tf.cast(labels, tf.int32)

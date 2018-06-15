@@ -1,0 +1,6 @@
+model_checkpoint_path: "/tmp/ig02_train/model.ckpt-40165"
+all_model_checkpoint_paths: "/tmp/ig02_train/model.ckpt-32126"
+all_model_checkpoint_paths: "/tmp/ig02_train/model.ckpt-34138"
+all_model_checkpoint_paths: "/tmp/ig02_train/model.ckpt-36145"
+all_model_checkpoint_paths: "/tmp/ig02_train/model.ckpt-38154"
+all_model_checkpoint_paths: "/tmp/ig02_train/model.ckpt-40165"
