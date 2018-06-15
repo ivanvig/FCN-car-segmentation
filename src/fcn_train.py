@@ -54,8 +54,8 @@ def train():
     tf.summary.image('output autos', logits[:,:,:,0:1])
     tf.summary.image('Mask', tf.where(
       tf.less(
-        logits[:,:,:,0:1],
-        tf.zeros(tf.shape(logits[:,:,:,0:1]))
+        tf.nn.softmax(logits)[:,:,:,0:1],
+        tf.fill(tf.shape(logits[:,:,:,0:1]), 0.7)
       ),
       tf.zeros(tf.shape(logits[:,:,:,0:1])),
       tf.ones(tf.shape(logits[:,:,:,0:1]))

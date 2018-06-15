@@ -3,7 +3,7 @@ import tensorflow as tf
 FLAGS = tf.app.flags.FLAGS
 
 # Basic model parameters.
-tf.app.flags.DEFINE_integer('batch_size', 24,
+tf.app.flags.DEFINE_integer('batch_size', 8,
                             """Number of images to process in a batch.""")
 tf.app.flags.DEFINE_string('data_dir', '../data/ig02-cars/cars/',
 """Path to the ig02 data directory.""")
@@ -138,11 +138,17 @@ def inference(images):
     #return conv2_1
     return tf.image.resize_images(conv2_1, tf.shape(images)[1:3])
 
+def focal_loss(logits, labels, alpha=0.25, gamma=2):
+    # TODO: aplicar alpha
+    softmax = tf.nn.softmax(logits)
+    return tf.reduce_mean(tf.multiply(tf.multiply(-((1-softmax)**gamma),tf.log(softmax)),labels), [1,2,3])
+
 def loss(logits, labels):
-    labels = tf.cast(labels, tf.int32)
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits( # TODO: usar sparce softmax con una sola mask
-        labels=labels, logits=logits, name='cross_entroy_per_example'
-    )
+    #labels = tf.cast(labels, tf.int32)
+    cross_entropy = focal_loss(logits, labels)
+    #cross_entropy = tf.nn.softmax_cross_entropy_with_logits( # TODO: usar sparce softmax con una sola mask
+    #    labels=labels, logits=logits, name='cross_entroy_per_example'
+    #)
     cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
     tf.add_to_collection('losses', cross_entropy_mean)
 
