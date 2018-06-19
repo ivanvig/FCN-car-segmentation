@@ -138,10 +138,21 @@ def inference(images):
     #return conv2_1
     return tf.image.resize_images(conv2_1, tf.shape(images)[1:3])
 
-def focal_loss(logits, labels, alpha=0.25, gamma=2):
+def focal_loss(logits, labels, alpha=[0.75,0.25], gamma=2):
     # TODO: aplicar alpha
     softmax = tf.nn.softmax(logits)
-    return tf.reduce_mean(tf.multiply(tf.multiply(-((1-softmax)**gamma),tf.log(softmax)),labels), [1,2,3])
+    # redimension de alpha:
+    alpha = tf.tile(tf.reshape(alpha,[1,1,1,NUM_CLASSES]), tf.concat([tf.shape(labels)[:-1],[1]], 0))
+    # retorna un tensor de las mismas dimensiones que retorna la cross entropy
+    return tf.reduce_mean(
+        tf.multiply(
+            tf.multiply(
+                -((1-softmax)**gamma),
+                tf.log(softmax)),
+            tf.multiply(labels, alpha)
+        ),
+        [1,2,3]
+    )
 
 def loss(logits, labels):
     #labels = tf.cast(labels, tf.int32)
