@@ -17,7 +17,7 @@ tf.app.flags.DEFINE_string('checkpoint_dir', '/tmp/ig02_train',
                            """Directory where to read model checkpoints.""")
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 1,
                             """How often to run the eval.""")
-tf.app.flags.DEFINE_integer('num_examples', 48,
+tf.app.flags.DEFINE_integer('num_examples', 46,
                             """Number of examples to run.""")
 tf.app.flags.DEFINE_boolean('run_once', False,
 """Whether to run eval only once.""")
@@ -99,7 +99,7 @@ def evaluate():
     # se invierte la mascara
     mask = tf.subtract(tf.fill(tf.shape(mask), 1.0), tf.cast(mask, tf.float32))
 
-    top_k_op = tf.equal(mask, labels[:,:,:,0:1])
+    top_k_op = tf.reduce_mean(tf.cast(tf.equal(mask, labels[:,:,:,0:1]), tf.float32), [1,2])
 
     tf.summary.image('input', images)
     tf.summary.image('label', labels[:,:,:,0:1])

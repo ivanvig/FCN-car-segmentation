@@ -11,7 +11,7 @@ tf.app.flags.DEFINE_string('data_dir', '../data/ig02-cars/cars/',
 tf.app.flags.DEFINE_string('train_files', '../data/ig02-cars/cars_train.txt',
 """Path to the ig02 file lists directory.""")
 
-tf.app.flags.DEFINE_string('eval_files', '../data/ig02-cars/cars_train.txt',
+tf.app.flags.DEFINE_string('eval_files', '../data/ig02-cars/cars_eval.txt',
 """Path to the ig02 file lists directory.""")
 
 NUM_CLASSES = 2
