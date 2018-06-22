@@ -83,18 +83,11 @@ def train():
           examples_per_sec = FLAGS.log_frequency * FLAGS.batch_size / duration
           sec_per_batch = float(duration / FLAGS.log_frequency)
 
-          format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
+          format_str = ('%s: step %d, loss = %.4f (%.1f examples/sec; %.3f '
                         'sec/batch)')
           print (format_str % (datetime.now(), self._step, loss_value,
                                examples_per_sec, sec_per_batch))
 
-    if FLAGS.debug: #borrar despues esto
-      with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        i, l = sess.run([logits, labels])
-        print(i.shape)
-        print(l.shape)
-        exit()
     with tf.train.MonitoredTrainingSession(
         checkpoint_dir=FLAGS.train_dir,
         hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
@@ -102,8 +95,6 @@ def train():
                _LoggerHook()],
         config=tf.ConfigProto(
           log_device_placement=FLAGS.log_device_placement)) as mon_sess:
-      if FLAGS.debug:
-        mon_sess = tf_debug.LocalCLIDebugWrapperSession(mon_sess)
       while not mon_sess.should_stop():
         mon_sess.run(train_op)
 

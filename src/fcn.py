@@ -11,6 +11,9 @@ tf.app.flags.DEFINE_string('data_dir', '../data/ig02-cars/cars/',
 tf.app.flags.DEFINE_string('train_files', '../data/ig02-cars/cars_train.txt',
 """Path to the ig02 file lists directory.""")
 
+tf.app.flags.DEFINE_string('eval_files', '../data/ig02-cars/cars_train.txt',
+"""Path to the ig02 file lists directory.""")
+
 NUM_CLASSES = 2
 NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = 177
 NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 46
@@ -148,7 +151,7 @@ def focal_loss(logits, labels, alpha=[0.75,0.25], gamma=2):
         tf.multiply(
             tf.multiply(
                 -((1-softmax)**gamma),
-                tf.log(softmax)),
+                tf.log(softmax + 1e-10)), # evita overflow
             tf.multiply(labels, alpha)
         ),
         [1,2,3]
@@ -178,7 +181,6 @@ def _add_loss_sumaries(total_loss):
     return loss_averages_op
 
 def train(total_loss, global_step):
-    num_batches_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN / FLAGS.batch_size
     loss_averages_op = _add_loss_sumaries(total_loss)
 
     with tf.control_dependencies([loss_averages_op]):

@@ -1,8 +1,10 @@
 import tensorflow as tf
 from distutils.version import LooseVersion
 
+### RETROCOMPATIBILIDAD ####
 if LooseVersion(tf.__version__) < LooseVersion("1.5"):
     setattr(tf, 'data', tf.contrib.data)
+### RETROCOMPATIBILIDAD ####
 
 def load_dataset(filename, data_path, batch_size=1):
     # ese -1 es para eliminar un elemento vacio de la lista
@@ -18,11 +20,12 @@ def _parse_function(imagename, data_path):
     img_dec = tf.image.decode_png(img, channels=3)
     img = tf.image.rgb_to_grayscale(img_dec)
     # submuestreo y pongo todo a la misma dimension para usar batch > 1
-    #img = tf.image.resize_images(img, [240, 380]) # TODO: hacerlo dinamico
+    #img = tf.image.resize_images(img, [240, 320]) # TODO: hacerlo dinamico
     img = tf.image.resize_images(img, [120, 160]) # TODO: hacerlo dinamico
     img_std = tf.image.per_image_standardization(img)
 
     label = tf.image.decode_png(tf.read_file(data_path+imagename+".mask.png"), channels=1)
+    #label = tf.image.resize_images(label, [240, 320]) # TODO: hacerlo dinamico
     label = tf.image.resize_images(label, [120, 160]) # TODO: hacerlo dinamico
     label = tf.divide(label,255)
     label_bg = tf.subtract(tf.fill(tf.shape(label), 1.0), label)
