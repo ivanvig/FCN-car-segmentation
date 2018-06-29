@@ -70,7 +70,7 @@ Attention: This script will destroy previous evaluating checkpoints
 
 If you want to watch the progress, run
 ```
-$ tensorboard --logdir=/tmp/ig02_train
+$ tensorboard --logdir=/tmp/ig02_eval
 ```
 
 ## References
