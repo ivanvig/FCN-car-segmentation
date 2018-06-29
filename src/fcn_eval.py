@@ -1,3 +1,11 @@
+'''
+Architecture based on: Fully Convolutional Networks for Semantic Segmentation
+https://people.eecs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf
+
+Code based on: Tensorflow's Convoltional Neural Networks tutorial
+https://www.tensorflow.org/tutorials/deep_cnn
+'''
+
 from datetime import datetime
 import math
 import time
@@ -16,7 +24,7 @@ tf.app.flags.DEFINE_string('eval_data', 'test',
 tf.app.flags.DEFINE_string('checkpoint_dir', '/tmp/ig02_train',
                            """Directory where to read model checkpoints.""")
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 1,
-                            """How often to run the eval.""")
+                            """How often to run the eval in secs.""")
 tf.app.flags.DEFINE_integer('num_examples', 46,
                             """Number of examples to run.""")
 tf.app.flags.DEFINE_boolean('run_once', False,
@@ -62,6 +70,7 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
         step += 1
 
       # Compute precision @ 1.
+      # TODO: Implement IoU insetad of this
       precision = true_count / total_sample_count
       print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
 
@@ -87,7 +96,11 @@ def evaluate():
     else:
         raise ValueError
 
-    images, labels = fcn_input.load_dataset(files, FLAGS.data_dir, FLAGS.batch_size)
+    images, labels = fcn_input.load_dataset(
+      files,
+      FLAGS.data_dir,
+      FLAGS.batch_size
+    )
 
     # Build a Graph that computes the logits predictions from the
     # inference model.
@@ -99,8 +112,12 @@ def evaluate():
     # se invierte la mascara
     mask = tf.subtract(tf.fill(tf.shape(mask), 1.0), tf.cast(mask, tf.float32))
 
-    top_k_op = tf.reduce_mean(tf.cast(tf.equal(mask, labels[:,:,:,0:1]), tf.float32), [1,2])
+    top_k_op = tf.reduce_mean(
+      tf.cast(tf.equal(mask, labels[:,:,:,0:1]), tf.float32),
+      [1,2]
+    )
 
+    # Adding images to summary
     tf.summary.image('input', images)
     tf.summary.image('label', labels[:,:,:,0:1])
     tf.summary.image('Mask', mask[:,:,:,0:1])
@@ -124,6 +141,7 @@ def evaluate():
 
 
 def main(argv=None):  # pylint: disable=unused-argument
+  # care: this deletes previous checkpoints if the dir exists
   if tf.gfile.Exists(FLAGS.eval_dir):
     tf.gfile.DeleteRecursively(FLAGS.eval_dir)
   tf.gfile.MakeDirs(FLAGS.eval_dir)

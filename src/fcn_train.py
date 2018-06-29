@@ -1,3 +1,11 @@
+'''
+Architecture based on: Fully Convolutional Networks for Semantic Segmentation
+https://people.eecs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf
+
+Code based on: Tensorflow's Convoltional Neural Networks tutorial
+https://www.tensorflow.org/tutorials/deep_cnn
+'''
+
 import tensorflow as tf
 import time
 from datetime import datetime
@@ -48,7 +56,7 @@ def train():
     # updates the model parameters.
     train_op = fcn.train(loss, global_step)
 
-    # Agrego summary de imagenes
+    # Add summary images
     tf.summary.image('input', images)
     tf.summary.image('label', labels[:,:,:,0:1])
     tf.summary.image('output autos', logits[:,:,:,0:1])
@@ -100,6 +108,7 @@ def train():
 
 
 def main(argv=None):  # pylint: disable=unused-argument
+  # care: this deletes previous checkpoints if the dir exists
   if tf.gfile.Exists(FLAGS.train_dir):
     tf.gfile.DeleteRecursively(FLAGS.train_dir)
   tf.gfile.MakeDirs(FLAGS.train_dir)
