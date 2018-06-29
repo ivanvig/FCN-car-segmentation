@@ -20,14 +20,19 @@ NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 46
 MOVING_AVERAGE_DECAY = 0.9999
 
 def _create_weights(name, shape, stddev, wd=None):
-    var = tf.Variable(tf.truncated_normal(shape=shape, stddev=stddev, name=name))
+    var = tf.Variable(
+        tf.truncated_normal(shape=shape, stddev=stddev, name=name)
+    )
     if wd is not None:
         weight_decay = tf.multiply(tf.nn.l2_loss(var), wd, name='weight_loss')
         tf.add_to_collection('losses', weight_decay)
     return var
 
 def _create_bias(name, shape):
-    return tf.Variable(tf.constant(value=0.0, shape=shape, dtype=tf.float32), name=name)
+    return tf.Variable(
+        tf.constant(value=0.0, shape=shape, dtype=tf.float32),
+        name=name
+    )
 
 def inference(images):
     """FCN model building.
@@ -43,12 +48,12 @@ def inference(images):
     with tf.variable_scope('conv1') as scope:
         kernel = _create_weights(
             'weights',
-            shape=[3, 3, 1, 8],
-            stddev=5e-2,
+            shape=[5, 5, 1, 4],
+            stddev=2./25,
             wd=None
         )
         conv = tf.nn.conv2d(images, kernel, [1,1,1,1], padding='SAME')
-        biases = _create_bias('biases', [8])
+        biases = _create_bias('biases', [4])
         pre_activation = tf.nn.bias_add(conv, biases)
         conv1 = tf.nn.relu(pre_activation, name=scope.name)
         # TODO: summary
@@ -62,15 +67,15 @@ def inference(images):
     )
 
     # norm1
-    #norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
+    #norm1 = tf.nn.lrn(pool1, 4, bias=2.0, alpha=0.001 / 9.0, beta=0.75,
     #    name='norm1')
 
     # conv2
     with tf.variable_scope('conv2') as scope:
         kernel = _create_weights(
             'weights',
-            shape=[3,3,8,8],
-            stddev=5e-2,
+            shape=[5,5,4,8],
+            stddev=2./(25*4),
             wd=None
         )
         conv = tf.nn.conv2d(pool1, kernel, [1,1,1,1], padding='SAME')
@@ -91,12 +96,12 @@ def inference(images):
     with tf.variable_scope('conv3') as scope:
         kernel = _create_weights(
             'weights',
-            shape=[3,3,8,32],
-            stddev=5e-2,
+            shape=[5,5,8,8],
+            stddev=2./(25*8),
             wd=None
         )
         conv = tf.nn.conv2d(pool2, kernel, [1,1,1,1], padding='SAME')
-        biases = _create_bias('biases', [32])
+        biases = _create_bias('biases', [8])
         pre_activation = tf.nn.bias_add(conv, biases)
         conv3 = tf.nn.relu(pre_activation, name=scope.name)
         # TODO: summary
@@ -108,18 +113,41 @@ def inference(images):
         padding='SAME',
         name='pool3'
     )
+
+    # conv4
+    with tf.variable_scope('conv4') as scope:
+        kernel = _create_weights(
+            'weights',
+            shape=[5,5,8,16],
+            stddev=2./(25*8),
+            wd=None
+        )
+        conv = tf.nn.conv2d(pool3, kernel, [1,1,1,1], padding='SAME')
+        biases = _create_bias('biases', [16])
+        pre_activation = tf.nn.bias_add(conv, biases)
+        conv4 = tf.nn.relu(pre_activation, name=scope.name)
+        # TODO: summary
+
+    pool_out = tf.nn.max_pool(
+        conv4,
+        ksize=[1,2,2,1],
+        strides=[1,2,2,1],
+        padding='SAME',
+        name='pool_out'
+    )
+
     # replacing fully connecteds
 
     # conv1_1
     with tf.variable_scope('conv1_1') as scope:
         kernel = _create_weights(
             'weights',
-            shape=[1,1,32,64],
-            stddev=5e-2,
-            wd=None
+            shape=[1,1,16,32],
+            stddev=2./16,
+            wd=0.004
         )
-        conv = tf.nn.conv2d(pool3, kernel, [1,1,1,1], padding='SAME')
-        biases = _create_bias('biases', [64])
+        conv = tf.nn.conv2d(pool_out, kernel, [1,1,1,1], padding='SAME')
+        biases = _create_bias('biases', [32])
         pre_activation = tf.nn.bias_add(conv, biases)
         conv1_1 = tf.nn.relu(pre_activation, name=scope.name)
         # TODO: summary
@@ -128,30 +156,68 @@ def inference(images):
     with tf.variable_scope('conv2_1') as scope:
         kernel = _create_weights(
             'weights',
-            shape=[1,1,64,NUM_CLASSES],
-            stddev=1/64.0,
-            wd=None
+            shape=[1,1,32,32],
+            stddev=2./32,
+            wd=0.004
         )
         conv = tf.nn.conv2d(conv1_1, kernel, [1,1,1,1], padding='SAME')
-        biases = _create_bias('biases', [NUM_CLASSES])
+        biases = _create_bias('biases', [32])
         pre_activation = tf.nn.bias_add(conv, biases)
-        conv2_1 = pre_activation # no se le aplica softmax aca
+        conv2_1 = tf.nn.relu(pre_activation, name=scope.name)
         # TODO: summary
 
-    #return conv2_1
-    return tf.image.resize_images(conv2_1, tf.shape(images)[1:3])
+    # conv3_1
+    with tf.variable_scope('conv3_1') as scope:
+        kernel = _create_weights(
+            'weights',
+            shape=[1,1,32,NUM_CLASSES],
+            stddev=2./32,
+            wd=0.004
+        )
+        conv = tf.nn.conv2d(conv2_1, kernel, [1,1,1,1], padding='SAME')
+        biases = _create_bias('biases', [NUM_CLASSES])
+        pre_activation = tf.nn.bias_add(conv, biases)
+        conv3_1 = pre_activation # no se le aplica softmax aca
+        # TODO: summary
+
+        # NETWORK END HERE
+
+    ### skip ##
+    # little classifier
+    with tf.variable_scope('little_classifier') as scope:
+        kernel = _create_weights(
+            'weights',
+            shape=[1,1,8,NUM_CLASSES],
+            stddev=2./8,
+            wd=None
+        )
+        conv = tf.nn.conv2d(pool3, kernel, [1,1,1,1], padding='SAME')
+        biases = _create_bias('biases', [NUM_CLASSES])
+        pre_activation = tf.nn.bias_add(conv, biases)
+        skip = pre_activation
+
+    small_out = tf.add(
+        tf.image.resize_images(conv3_1, tf.shape(skip)[1:3]),
+        skip
+        )
+    #########
+
+    return tf.image.resize_images(small_out, tf.shape(images)[1:3])
 
 def focal_loss(logits, labels, alpha=[0.75,0.25], gamma=2):
     # TODO: aplicar alpha
     softmax = tf.nn.softmax(logits)
     # redimension de alpha:
-    alpha = tf.tile(tf.reshape(alpha,[1,1,1,NUM_CLASSES]), tf.concat([tf.shape(labels)[:-1],[1]], 0))
+    alpha = tf.tile(
+        tf.reshape(alpha,[1,1,1,NUM_CLASSES]),
+        tf.concat([tf.shape(labels)[:-1],[1]], 0)
+    )
     # retorna un tensor de las mismas dimensiones que retorna la cross entropy
     return tf.reduce_mean(
         tf.multiply(
             tf.multiply(
                 -((1-softmax)**gamma),
-                tf.log(softmax + 1e-10)), # evita overflow
+                tf.log(softmax + 1e-10)), # evita underflow
             tf.multiply(labels, alpha)
         ),
         [1,2,3]
