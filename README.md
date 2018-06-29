@@ -30,10 +30,10 @@ Alternatively, you can download the dataset from [here](https://lear.inrialpes.f
 
 The code is distributed in four files:
 
-*[fcn.py](src/fcn.py)
-*[fcn_train.py](src/fcn_train.py)
-*[fcn_eval.py](src/fcn_eval.py)
-*[fcn_input.py](src/fcn_input.py)
+* [fcn.py](src/fcn.py)
+* [fcn_train.py](src/fcn_train.py)
+* [fcn_eval.py](src/fcn_eval.py)
+* [fcn_input.py](src/fcn_input.py)
 
 ### fcn.py
 
@@ -51,7 +51,7 @@ $ python fcn_train.py
 ```
 Attention: This script will destroy previous training checkpoints
 
-It you want to watch the progress, run
+If you want to watch the progress, run
 ```
 $ tensorboard --logdir=/tmp/ig02_train
 ```
@@ -68,7 +68,7 @@ python fcn_eval.py
 ```
 Attention: This script will destroy previous evaluating checkpoints
 
-It you want to watch the progress, run
+If you want to watch the progress, run
 ```
 $ tensorboard --logdir=/tmp/ig02_train
 ```
