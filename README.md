@@ -72,3 +72,9 @@ If you want to watch the progress, run
 ```
 $ tensorboard --logdir=/tmp/ig02_train
 ```
+
+## References
+
+* [Fully Convolutional Networks for Semantic Segmentation](https://people.eecs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf)
+* [Focal Loss for Dense Object Detection](https://arxiv.org/abs/1708.02002)
+* [Convolutional Neural Network - Tensorflow](https://www.tensorflow.org/tutorials/deep_cnn)
