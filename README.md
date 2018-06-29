@@ -64,7 +64,7 @@ You can change the logdir modifing a line in [fcn_train.py](src/fcn_train.py), r
 This is the script that evaluates the network being trained using the evaluation set.
 
 ```
-python fcn_eval.py
+$ python fcn_eval.py
 ```
 Attention: This script will destroy previous evaluating checkpoints
 
